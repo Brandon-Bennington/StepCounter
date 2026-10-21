@@ -42,26 +42,97 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+// Class 3
+import android.Manifest
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
+import android.content.pm.PackageManager
+import android.os.Build
+import android.os.Message
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
+import androidx.core.content.getSystemService
+
+const val CHANNEL_ID = "fitness_alerts"
+const val HEART_RATE_NOTIFICATION_ID = 1
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        createNotificationChannel(this)
         setContent {
             StepCounterTheme {
                 WearFitnessApp()
             }
         }
     }
+    private fun createNotificationChannel(context: Context) {
+        val channel = NotificationChannel(
+            CHANNEL_ID,
+            "Fitness Alerts",
+            NotificationManager.IMPORTANCE_DEFAULT
+        ).apply {
+            description = "Heart-rate and activity reminders"
+        }
+        val notificationManager = context.getSystemService(NotificationManager::class.java)
+        notificationManager.createNotificationChannel(channel)
+    }
 }
 
 @Composable
 fun WearFitnessApp() {
     val navController = rememberNavController()
+    val context = LocalContext.current
 
     var steps by remember { mutableIntStateOf(30) }
     var calories by remember { mutableIntStateOf(25) }
     var stepsGoal by remember { mutableIntStateOf(10000) }
     var caloriesGoal by remember { mutableIntStateOf(500) }
+
+    var heartRate by remember { mutableIntStateOf(72) }
+    var heartRateNotificationSent by remember { mutableStateOf(false) }
+
+    var notificationPermissionGranted by remember {
+        mutableStateOf(
+            Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+            ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)  == PackageManager.PERMISSION_GRANTED
+        )
+    }
+
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        notificationPermissionGranted = isGranted
+    }
+
+    LaunchedEffect(Unit) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !notificationPermissionGranted) {
+            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
+
+    LaunchedEffect(heartRate, notificationPermissionGranted) {
+        if (heartRate >= 100 && !heartRateNotificationSent && notificationPermissionGranted) {
+            showNotification(
+                context = context,
+                notificationId = HEART_RATE_NOTIFICATION_ID,
+                title = "High Heart Rate Detected",
+                message = "Your heart rate reached $heartRate BMP"
+            )
+            heartRateNotificationSent = true
+        }
+
+        if (heartRate < 100) {
+            heartRateNotificationSent = false
+        }
+    }
 
     SwipeNavigationContainer(navController = navController) {
         NavHost(
@@ -78,7 +149,11 @@ fun WearFitnessApp() {
                 )
             }
             composable("heart" ) {
-                HeartRateScreen()
+                HeartRateScreen(
+                    heartRate = heartRate,
+                    onDecreaseHeartRate = { heartRate-- },
+                    onIncreaseHeartRate = { heartRate++ }
+                )
             }
             composable("goals") {
                 ModifyGoalScreen(
@@ -175,7 +250,11 @@ fun DailyProgressScreen(
 
 
 @Composable
-fun HeartRateScreen() {
+fun HeartRateScreen(
+    heartRate: Int,
+    onDecreaseHeartRate: () -> Unit,
+    onIncreaseHeartRate: () -> Unit
+) {
     Column(
         modifier = Modifier.fillMaxSize().padding(16.dp),
         verticalArrangement = Arrangement.Center,
@@ -183,12 +262,16 @@ fun HeartRateScreen() {
     ) {
         Text(text = "Heart Rate", color = Color.White, style = MaterialTheme.typography.titleMedium)
         Spacer(modifier = Modifier.height(16.dp))
-        Text(text = "72 BPM", color = Color.White, style = MaterialTheme.typography.displaySmall)
+        Text(text = "$heartRate BMP", color = Color.White, style = MaterialTheme.typography.displaySmall)
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(16.dp))
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
+            Button(onClick = onDecreaseHeartRate) { Text("-")}
+            Spacer(modifier = Modifier.width(8.dp))
+            Button(onClick = onIncreaseHeartRate) { Text("+")}
+        }
+
         Text(text = "<- Swipe ->", color = Color.Gray, style = MaterialTheme.typography.bodySmall)
-
-
     }
 }
 
@@ -236,6 +319,28 @@ fun ModifyGoalScreen(
 
 
 
+fun showNotification(
+    context: Context,
+    notificationId: Int,
+    title: String,
+    message: String
+) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+        ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+    ) {
+        return
+    }
+
+    val notification = NotificationCompat.Builder(context, CHANNEL_ID)
+        .setSmallIcon(android.R.drawable.ic_dialog_info)
+        .setContentTitle(title)
+        .setContentText(message)
+        .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+        .setAutoCancel(true)
+        .build()
+
+    NotificationManagerCompat.from(context).notify(notificationId, notification)
+}
 
 
 
@@ -316,29 +421,3 @@ fun ModifyGoalScreen(
 //        }
 //    }
 //}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
