@@ -28,6 +28,7 @@ import androidx.wear.compose.material3.Button
 import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.Text
 import com.example.stepcounter.presentation.theme.StepCounterTheme
+<<<<<<< HEAD
 // class 2
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Box
@@ -42,19 +43,26 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+=======
+>>>>>>> 7a16fc8fb70c2dc9c1a2e035d56ce78917e871e3
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             StepCounterTheme {
+<<<<<<< HEAD
                 WearFitnessApp()
+=======
+                StepCounterScreen()
+>>>>>>> 7a16fc8fb70c2dc9c1a2e035d56ce78917e871e3
             }
         }
     }
 }
 
 @Composable
+<<<<<<< HEAD
 fun WearFitnessApp() {
     val navController = rememberNavController()
 
@@ -231,6 +239,69 @@ fun ModifyGoalScreen(
         Spacer(modifier = Modifier.height(6.dp))
 
         Text(text = "← Swipe", color = Color.Gray, style = MaterialTheme.typography.bodySmall)
+=======
+fun StepCounterScreen() {
+    var steps by remember {
+        mutableIntStateOf(777)
+    }
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // Daily Goal: Hardcoded, this class only
+        Text(
+            text = "Daily Goal",
+            color = Color.White,
+            style = MaterialTheme.typography.labelMedium
+        )
+        Text(
+            text = "10,000 steps / 500 cal",
+            color = Color.White,
+            style = MaterialTheme.typography.bodySmall
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // Calories: hardcoded
+        Text(
+            text = "Calories",
+            color = Color.White,
+            style = MaterialTheme.typography.labelMedium
+        )
+        Text(
+            text = "25 kcal",
+            color = Color.White,
+            style = MaterialTheme.typography.titleMedium
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // Steps Today: the one Live value on this screen
+        Text(
+            text = "Steps Today",
+            color = Color.White,
+            style = MaterialTheme.typography.labelMedium
+        )
+        Text(
+            text = steps.toString(),
+            color = Color.White,
+            style = MaterialTheme.typography.titleMedium
+        )
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        // Button
+        Button(
+            onClick = {
+                steps++
+            }
+        ) {
+            Text("Add Steps")
+        }
+>>>>>>> 7a16fc8fb70c2dc9c1a2e035d56ce78917e871e3
     }
 }
 
@@ -251,6 +322,7 @@ fun ModifyGoalScreen(
 
 
 
+<<<<<<< HEAD
 //
 //@Composable
 //fun StepCounterScreen() {
@@ -334,6 +406,8 @@ fun ModifyGoalScreen(
 
 
 
+=======
+>>>>>>> 7a16fc8fb70c2dc9c1a2e035d56ce78917e871e3
 
 
 

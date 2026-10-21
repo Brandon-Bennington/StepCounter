@@ -37,8 +37,11 @@ android {
 }
 
 dependencies {
+<<<<<<< HEAD
     implementation(libs.navigation.compose)
 
+=======
+>>>>>>> 7a16fc8fb70c2dc9c1a2e035d56ce78917e871e3
     implementation(platform(libs.compose.bom))
     implementation(libs.activity.compose)
     implementation(libs.compose.foundation)

@@ -9,10 +9,15 @@ composeUiTooling = "1.5.6"
 wearToolingPreview = "1.0.0"
 activityCompose = "1.13.0"
 coreSplashscreen = "1.2.0"
+<<<<<<< HEAD
 navigationCompose = "2.9.8"
 
 [libraries]
 navigation-compose = {group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose"}
+=======
+
+[libraries]
+>>>>>>> 7a16fc8fb70c2dc9c1a2e035d56ce78917e871e3
 play-services-wearable = { group = "com.google.android.gms", name = "play-services-wearable", version.ref = "playServicesWearable" }
 compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
 ui = { group = "androidx.compose.ui", name = "ui" }
