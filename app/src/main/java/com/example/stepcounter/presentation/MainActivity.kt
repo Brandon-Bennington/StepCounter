@@ -356,7 +356,7 @@ fun showNotification(
 
 
 
-//
+// fix
 //@Composable
 //fun StepCounterScreen() {
 //    var steps by remember {
