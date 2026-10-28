@@ -22,5 +22,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "StepCounter"
-include(":app")
+rootProject.name = "MDI2-113"
+include(":wear")
+include(":mobile")
+include(":mobile")
