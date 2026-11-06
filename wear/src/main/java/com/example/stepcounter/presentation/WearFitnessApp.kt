@@ -41,7 +41,8 @@ import androidx.wear.compose.material3.Text
 
 
 @Composable
-fun WearFitnessApp(heartRateSensorValue: Int, hasHeartRateSensor: Boolean) {
+fun WearFitnessApp(heartRateSensorValue: Int, hasHeartRateSensor: Boolean,
+                   stepsGoalFromPhone: Int) {
     val navController = rememberNavController()
     val context = LocalContext.current
 
@@ -50,12 +51,18 @@ fun WearFitnessApp(heartRateSensorValue: Int, hasHeartRateSensor: Boolean) {
     var stepsGoal by remember { mutableIntStateOf(10000) }
     var caloriesGoal by remember { mutableIntStateOf(500) }
 
+    var displayedStepsGoal by remember { mutableIntStateOf(stepsGoalFromPhone) }
+    LaunchedEffect(stepsGoalFromPhone) {
+        displayedStepsGoal = stepsGoalFromPhone
+    }
+
 
     var manualHeartRate by remember { mutableIntStateOf(72) }
     val displayedHeartRate = if (hasHeartRateSensor) heartRateSensorValue else manualHeartRate
 
 
     var heartRateNotificationSent by remember { mutableStateOf(false) }
+    var stepNotificationSent by remember { mutableStateOf(false) }
 
     var notificationPermissionGranted by remember {
         mutableStateOf(
@@ -91,11 +98,23 @@ fun WearFitnessApp(heartRateSensorValue: Int, hasHeartRateSensor: Boolean) {
     }
 
 
+    LaunchedEffect(steps, notificationPermissionGranted) {
+        if (steps >= STEP_NOTIFICATION_THRESHOLD && !stepNotificationSent && notificationPermissionGranted) {
+            showNotification(
+                context = context,
+                notificationId = STEP_COUNT_NOTIFICATION_ID,
+                title = "Step Count Achieved!",
+                message = "You've walked $steps steps today!"
+            )
+            stepNotificationSent = true
+        }
+    }
+
     SwipeNavigationContainer(navController = navController) {
         NavHost(navController = navController, startDestination = "progress") {
             composable("progress") {
                 DailyProgressScreen(
-                    steps = steps, calories = calories, stepsGoal = stepsGoal, caloriesGoal = caloriesGoal,
+                    steps = steps, calories = calories, stepsGoal = displayedStepsGoal, caloriesGoal = caloriesGoal,
                     onAddStep = { steps++; calories++ }
                 )
             }
@@ -111,9 +130,15 @@ fun WearFitnessApp(heartRateSensorValue: Int, hasHeartRateSensor: Boolean) {
             }
             composable("goals") {
                 ModifyGoalScreen(
-                    stepsGoal = stepsGoal, caloriesGoal = caloriesGoal,
-                    onDecreaseStepsGoal = { stepsGoal -= 500 }, onIncreaseStepsGoal = { stepsGoal += 500 },
+                    stepsGoal = displayedStepsGoal, caloriesGoal = caloriesGoal,
+                    onDecreaseStepsGoal = { displayedStepsGoal -= 500 }, onIncreaseStepsGoal = { displayedStepsGoal += 500 },
                     onDecreaseCaloriesGoal = { caloriesGoal -= 50 }, onIncreaseCaloriesGoal = { caloriesGoal += 50 }
+                )
+            }
+            composable("alerts") {
+                StepAlertScreen(
+                    steps = steps,
+                    onAddSteps = { steps += STEP_NOTIFICATION_THRESHOLD }
                 )
             }
         }
@@ -125,7 +150,7 @@ fun SwipeNavigationContainer(
     navController: NavHostController,
     content: @Composable () -> Unit
 ) {
-    val routes = listOf("progress", "heart", "goals")
+    val routes = listOf("progress", "heart", "goals", "alerts")
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route ?: "progress"
     val currentIndex = routes.indexOf(currentRoute)
@@ -175,6 +200,22 @@ fun DailyProgressScreen(
         Text(text = "$calories / $caloriesGoal", color = Color.White, style = MaterialTheme.typography.titleMedium)
         Spacer(modifier = Modifier.height(12.dp))
         Button(onClick = onAddStep) { Text("Add") }
+    }
+}
+
+@Composable
+fun StepAlertScreen(steps: Int, onAddSteps: () -> Unit) {
+    Column(
+        modifier = Modifier.fillMaxSize().padding(16.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text("Step Alert", color = Color.White, style = MaterialTheme.typography.titleMedium)
+        Spacer(Modifier.height(12.dp))
+        Text("$steps steps", color = Color.White, style = MaterialTheme.typography.titleMedium)
+        Text("Alert at $STEP_NOTIFICATION_THRESHOLD", color = Color.White)
+        Spacer(Modifier.height(12.dp))
+        Button(onClick = onAddSteps) { Text("Add 1000") }
     }
 }
 

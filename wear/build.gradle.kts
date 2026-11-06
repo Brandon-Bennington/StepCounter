@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -38,6 +39,10 @@ android {
 
 dependencies {
     implementation(libs.navigation.compose)
+    implementation(platform("com.google.firebase:firebase-bom:34.16.0"))
+    implementation("com.google.firebase:firebase-firestore")
+    implementation(project(":shared"))
+
 
     implementation(platform(libs.compose.bom))
     implementation(libs.activity.compose)

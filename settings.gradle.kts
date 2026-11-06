@@ -25,4 +25,4 @@ dependencyResolutionManagement {
 rootProject.name = "MDI2-113"
 include(":wear")
 include(":mobile")
-include(":mobile")
+include(":shared")

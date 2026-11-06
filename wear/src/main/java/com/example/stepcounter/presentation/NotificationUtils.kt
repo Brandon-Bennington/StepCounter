@@ -12,6 +12,8 @@ import androidx.core.content.ContextCompat
 
 const val CHANNEL_ID = "fitness_alerts"
 const val HEART_RATE_NOTIFICATION_ID = 1
+const val STEP_COUNT_NOTIFICATION_ID = 2
+const val STEP_NOTIFICATION_THRESHOLD = 1000
 
 fun showNotification(
     context: Context,
