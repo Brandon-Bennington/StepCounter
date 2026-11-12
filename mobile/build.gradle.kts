@@ -60,4 +60,5 @@ dependencies {
     implementation(libs.play.services.wearable)
     implementation(platform(libs.compose.bom))
     implementation(libs.activity.compose)
+    implementation("androidx.compose.material3:material3-window-size-class")
 }

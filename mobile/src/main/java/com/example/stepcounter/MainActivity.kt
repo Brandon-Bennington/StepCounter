@@ -3,136 +3,26 @@ package com.example.stepcounter
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
-import android.util.Log
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import com.example.stepcounter.shared.`data`.FirebaseRepository
-import androidx.compose.runtime.DisposableEffect
+import com.example.stepcounter.dashboard.PhoneCompanionApp
 
 class MainActivity : ComponentActivity() {
+    @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val repository = FirebaseRepository()
         setContent {
+            val widthSizeClass = calculateWindowSizeClass(this).widthSizeClass
             MaterialTheme {
-                PhoneCompanionApp(repository = repository)
+                PhoneCompanionApp(
+                    repository = repository,
+                    widthSizeClass = widthSizeClass
+                )
             }
         }
     }
 }
 
-@Composable
-fun PhoneCompanionApp(repository: FirebaseRepository) {
-    val context = LocalContext.current
-    var stepsGoal by remember { mutableIntStateOf(10000) }
-    var sendStatus by remember { mutableStateOf("Not sent") }
-
-    DisposableEffect(repository) {
-        val listenerRegistration = repository.listenToFitnessData(
-            onDataChanged = { fitnessData ->
-                stepsGoal = fitnessData.dailyGoal.toInt()
-                sendStatus = "Goal received from Firebase: $stepsGoal"
-            },
-            onError = { exception ->
-                sendStatus = "Firebase listener error: " + (exception.message ?: "Unknown error")
-            }
-        )
-        onDispose { listenerRegistration.remove() }
-    }
-
-
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = "Wear Fitness",
-            style = MaterialTheme.typography.headlineMedium
-        )
-        Spacer(modifier = Modifier.height(24.dp))
-        Text(
-            text = "Steps Goal",
-            style = MaterialTheme.typography.titleMedium
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Button(onClick = {
-                if (stepsGoal > 500) {
-                    stepsGoal -= 500
-                }
-            }) {
-                Text("-")
-            }
-            Spacer(modifier = Modifier.width(16.dp))
-            Text(
-                text = stepsGoal.toString(),
-                style = MaterialTheme.typography.headlineSmall
-            )
-            Spacer(modifier = Modifier.width(16.dp))
-            Button(onClick = { stepsGoal += 500 }) {
-                Text("+")
-            }
-        }
-        Spacer(modifier = Modifier.height(24.dp))
-        Button(onClick = {
-            val goalToSend = stepsGoal
-            sendStatus = "Sending..."
-            sendStepsGoalToWatch(
-                context = context,
-                stepsGoal = goalToSend,
-                onSuccess = {
-                    Log.d("PhoneDataLayer", "Data Layer write succeeded: $goalToSend")
-                    sendStatus = "Sent $goalToSend to the watch"
-                },
-                onError = { errorMessage -> sendStatus = "Error: $errorMessage" }
-            )
-        }) {
-            Text("Send to Watch")
-        }
-        Spacer(modifier = Modifier.height(12.dp))
-        Button(onClick = {
-            val goalToSave = stepsGoal
-            sendStatus = "Saving to Firebase..."
-            repository.updateDailyGoal(
-                dailyGoal = goalToSave.toLong(),
-                onSuccess = {
-                    Log.d("SharedFirebase", "Cloud write succeeded: $goalToSave")
-                    sendStatus = "Saved $goalToSave in Firebase"
-                },
-                onError = { exception ->
-                    sendStatus = "Firebase error: " + (exception.message ?: "Unknown error")
-                }
-            )
-        }) {
-            Text("Save to Firebase")
-        }
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(text = "Status: $sendStatus")
-    }
-}
